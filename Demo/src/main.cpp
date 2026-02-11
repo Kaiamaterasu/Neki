@@ -55,7 +55,7 @@ public:
 		if (m_reg.EntityInRegistry(m_helmetEntity) && m_reg.GetComponent<NK::CTransform>(m_helmetEntity).name == "Helmet")
 		{
 			NK::CTransform& helmetTransform{ m_reg.GetComponent<NK::CTransform>(m_helmetEntity) };
-			constexpr float speed{ 50.0f };
+			const float speed{ 100.0f * (glm::sin(helmetTransform.GetLocalRotation().y) * 0.5f + 0.5f) + 20.0f };
 			const float rotationAmount{ glm::radians(speed * static_cast<float>(NK::TimeManager::GetDeltaTime())) };
 			helmetTransform.SetLocalRotation(helmetTransform.GetLocalRotation() + glm::vec3(0, rotationAmount, 0));
 		}
@@ -235,7 +235,7 @@ public:
 		//Window
 		NK::WindowDesc windowDesc;
 		windowDesc.name = "Demo";
-		windowDesc.size = { 1920, 1080 };
+		windowDesc.size = { 3840, 2160 };
 		m_window = NK::UniquePtr<NK::Window>(NK_NEW(NK::Window, windowDesc));
 		m_window->SetCursorVisibility(false);
 
@@ -249,7 +249,7 @@ public:
 		renderLayerDesc.backend = NK::GRAPHICS_BACKEND::VULKAN;
 		renderLayerDesc.enableMSAA = false;
 		renderLayerDesc.msaaSampleCount = NK::SAMPLE_COUNT::BIT_8;
-		renderLayerDesc.enableSSAA = false;
+		renderLayerDesc.enableSSAA = true;
 		renderLayerDesc.ssaaMultiplier = 4;
 		renderLayerDesc.window = m_window.get();
 		renderLayerDesc.framesInFlight = 3;
@@ -316,10 +316,6 @@ public:
 private:
 	NK::UniquePtr<NK::Window> m_window;
 	NK::Entity m_windowEntity;
-
-	#if NEKI_EDITOR
-		bool m_editorActiveKeyPressedLastFrame{ false };
-	#endif
 	
 	//Pre-app layers
 	NK::UniquePtr<NK::WindowLayer> m_windowLayer;
