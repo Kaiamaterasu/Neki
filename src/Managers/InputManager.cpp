@@ -79,24 +79,36 @@ namespace NK
 
 	ButtonState InputManager::GetButtonState(const ActionTypeMapKey& _key)
 	{
-		const ButtonBinding& binding{ std::get<ButtonBinding>(m_actionToInputMap[_key]) };
-		return EvaluateButtonBinding(binding);
+		const ButtonBinding* binding{ std::get_if<ButtonBinding>(&m_actionToInputMap[_key]) };
+		if (!binding)
+		{
+			return ButtonState{}; // Return default state if binding doesn't exist or wrong type
+		}
+		return EvaluateButtonBinding(*binding);
 	}
 
 
 
 	Axis1DState InputManager::GetAxis1DState(const ActionTypeMapKey& _key)
 	{
-		const Axis1DBinding& binding{ std::get<Axis1DBinding>(m_actionToInputMap[_key]) };
-		return EvaluateAxis1DBinding(binding);
+		const Axis1DBinding* binding{ std::get_if<Axis1DBinding>(&m_actionToInputMap[_key]) };
+		if (!binding)
+		{
+			return Axis1DState{}; // Return default state if binding doesn't exist or wrong type
+		}
+		return EvaluateAxis1DBinding(*binding);
 	}
 
 
 
 	Axis2DState InputManager::GetAxis2DState(const ActionTypeMapKey& _key)
 	{
-		const Axis2DBinding& binding{ std::get<Axis2DBinding>(m_actionToInputMap[_key]) };
-		return EvaluateAxis2DBinding(binding);
+		const Axis2DBinding* binding{ std::get_if<Axis2DBinding>(&m_actionToInputMap[_key]) };
+		if (!binding)
+		{
+			return Axis2DState{}; // Return default state if binding doesn't exist or wrong type
+		}
+		return EvaluateAxis2DBinding(*binding);
 	}
 
 
