@@ -46,3 +46,4 @@ After cloning the repository:
 While Vulkan remains the only API compatible for development with Neki on Linux based platforms, developing on Windows allows for both Vulkan and D3D12 simultaneously.
 For building on simultaneous DX12 and Vulkan, there exists a `Vulkan/D3D12 (Debug)` preset which can be selected using the same instructions as above
 - For CMake CLI, the cross-API build is configured with `cmake --preset "Vulkan/D3D12 (Debug)"` and built with `cmake --build --preset "Vulkan/D3D12 (Debug)"`. The executables for both platforms can thereafter be found under `build/cross-api-debug/`.
+- i will be making improvements for this project'
