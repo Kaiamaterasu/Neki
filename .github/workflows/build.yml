@@ -1,0 +1,144 @@
+# Workflow to build and test Neki Game Engine
+name: Build and Test
+
+# Run on pushes to main and pull requests
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+# Set environment variables
+env:
+  BUILD_TYPE: 'Debug'
+
+jobs:
+  # ===========================================================================
+  # Linux Build (Vulkan)
+  # ===========================================================================
+  linux-vulkan-build:
+    name: Linux Vulkan (${{ matrix.preset }})
+    runs-on: ubuntu-22.04
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: ['Vulkan-Debug']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgl1-mesa-dev \
+          libx11-dev \
+          libxrandr-dev \
+          libxinerama-dev \
+          libxcursor-dev \
+          libxi-dev \
+          libx11-xcb-dev \
+          libxcb-cursor0 \
+          libxcb-keysyms1 \
+          libxcb-randr0 \
+          libxcb-render-util0 \
+          libxcb-shape0
+      
+    - name: Configure CMake
+      run: cmake --preset "${{ matrix.preset }}"
+      
+    - name: Build
+      run: cmake --build --preset "${{ matrix.preset }}" --parallel
+      
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-${{ matrix.preset }}
+        path: |
+          build/vulkan-debug/bin/*
+          !build/vulkan-debug/bin/*.pdb
+
+  # ===========================================================================
+  # Windows Build (Vulkan + D3D12)
+  # ===========================================================================
+  windows-build:
+    name: Windows (${{ matrix.preset }})
+    runs-on: windows-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: ['Vulkan-Debug', 'D3D12-Debug', 'Vulkan/D3D12-Debug']
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Configure CMake
+      run: cmake --preset "${{ matrix.preset }}"
+      
+    - name: Build
+      run: cmake --build --preset "${{ matrix.preset }}" --parallel
+      
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-${{ matrix.preset }}
+        path: |
+          build/cross-api-debug/bin/*.exe
+          build/vulkan-debug/bin/*.exe
+          build/d3d12-debug/bin/*.exe
+
+  # ===========================================================================
+  # Code Quality Check (clang-tidy)
+  # ===========================================================================
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-22.04
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy
+        
+    - name: Run clang-tidy
+      run: |
+        # This is a simplified example; in practice you'd want to
+        # configure which files to check and what checks to run
+        find src -name "*.cpp" -o -name "*.h" | head -20 | xargs clang-tidy -header-filter='src/.*' 2>&1 | tee clang-tidy.log || true
+        
+    - name: Upload clang-tidy log
+      uses: actions/upload-artifact@v4
+      with:
+        name: clang-tidy-log
+        path: clang-tidy.log
+
+  # ===========================================================================
+  # Summary
+  # ===========================================================================
+  summary:
+    name: Build Summary
+    needs: [linux-vulkan-build, windows-build, code-quality]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Summary
+      run: |
+        echo "## Build Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Linux" >> $GITHUB_STEP_SUMMARY
+        echo "- Vulkan Debug: ${{ needs.linux-vulkan-build.result }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Windows" >> $GITHUB_STEP_SUMMARY
+        echo "- Vulkan Debug: ${{ needs.windows-build.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- D3D12 Debug: ${{ needs.windows-build.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Cross-API: ${{ needs.windows-build.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Code Quality" >> $GITHUB_STEP_SUMMARY
+        echo "- clang-tidy: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY

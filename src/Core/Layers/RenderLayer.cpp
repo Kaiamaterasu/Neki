@@ -2149,7 +2149,7 @@ namespace NK
 		const bool isSelected{ m_reg.get().HasComponent<CSelected>(entity) };
 
 		char label[256];
-		sprintf(label, _transform.name.c_str());
+		snprintf(label, sizeof(label), "%s", _transform.name.c_str());
 		if (ImGui::Selectable(label, isSelected))
 		{
 			//Clear previous selection (only one selection is allowed at a time)

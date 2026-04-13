@@ -46,6 +46,20 @@ namespace NK
 			throw std::runtime_error("ImageLoader::LoadImage() - Failed to load image at filepath: " + _filepath); 
 		}
 
+		// Validate image dimensions to prevent integer overflow
+		if (width <= 0 || height <= 0)
+		{
+			stbi_image_free(basePixels);
+			throw std::runtime_error("ImageLoader::LoadImage() - Invalid image dimensions: " + std::to_string(width) + "x" + std::to_string(height));
+		}
+
+		// Check for unreasonably large images that could cause integer overflow
+		if (width > 65536 || height > 65536)
+		{
+			stbi_image_free(basePixels);
+			throw std::runtime_error("ImageLoader::LoadImage() - Image dimensions exceed maximum supported size (65536x65536)");
+		}
+
 		ImageData imageData{};
 		imageData.desc.size = glm::ivec3(width, height, 1);
 		imageData.desc.dimension = TEXTURE_DIMENSION::DIM_2;

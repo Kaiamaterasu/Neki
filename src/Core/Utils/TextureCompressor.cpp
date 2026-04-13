@@ -377,7 +377,7 @@ namespace NK
 	{
 		for (std::unordered_map<std::string, UniquePtr<ImageData>>::iterator it{ m_filepathToImageDataCache.begin() }; it != m_filepathToImageDataCache.end(); ++it)
 		{
-			if (it->second->data)
+			if (it->second && it->second->data)
 			{
 				free(it->second->data);
 				it->second->data = nullptr;
